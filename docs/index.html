@@ -17,9 +17,12 @@
   </header>
 
   <script>
-    fetch('https://api.energidataservice.dk/datastore_search?resource_id=electricityprodex5minrealtime&limit=5', function() {
-      console.log(arguments);
-    });
+    fetch('https://api.energidataservice.dk/datastore_search?resource_id=electricityprodex5minrealtime&limit=5', {
+      method: 'GET',
+      mode: 'no-cors'
+    })
+      .then(function(e) { console.log(arguments) })
+      .catch(function(e) { console.error(arguments) });
   </script>
 </body>
 
