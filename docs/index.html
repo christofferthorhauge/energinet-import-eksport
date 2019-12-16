@@ -17,8 +17,9 @@
   </header>
 
   <script>
-    function rule(currentLog) {
-      // Hvis nuværende udveksling af energi er positiv (vi sælger energi)
+    function rule(currentEntry) {
+      // Hvis nuværende udveksling af energi er negativ
+      // (vi eksporterer mere end vi importerer)
       if (currentLog.exchange < 0) {
         return true;
       }
