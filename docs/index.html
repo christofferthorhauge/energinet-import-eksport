@@ -12,17 +12,105 @@
 <body>
   <header>
     <div class="contain">
-      <h1>Henter seneste data...</h1>
+      <h1>Henter seneste data fra Energinet...</h1>
     </div>
   </header>
 
   <script>
-    fetch('https://api.energidataservice.dk/datastore_search?resource_id=electricityprodex5minrealtime&limit=5', {
-      method: 'GET',
-      mode: 'no-cors'
-    })
-      .then(function(e) { console.log(arguments) })
-      .catch(function(e) { console.error(arguments) });
+    function rule(currentLog) {
+      // Hvis nuværende udveksling af energi er positiv (vi sælger energi)
+      if (currentLog.exchange < 0) {
+        return true;
+      }
+
+      return false;
+    }
+
+    function aggreateData(response) {
+      const records = response.result.records;
+      const aggregate = [];
+
+      const numberOfRecords = records.length;
+      for (let i = 0; i < numberOfRecords; i += 2) {
+        const priceArea1 = records.shift();
+        const priceArea2 = records.shift();
+
+        const exchange = [
+          priceArea1.ExchangeNetherlands || 0,
+          priceArea1.ExchangeNorway || 0,
+          priceArea1.ExchangeSweden || 0,
+          priceArea1.ExchangeGermany || 0,
+          priceArea2.ExchangeNetherlands || 0,
+          priceArea2.ExchangeNorway || 0,
+          priceArea2.ExchangeSweden || 0,
+          priceArea2.ExchangeGermany || 0
+        ];
+
+        const production = [
+          priceArea1.ProductionLt100MW || 0,
+          priceArea1.ProductionGe100MW || 0,
+          priceArea1.OnshoreWindPower || 0,
+          priceArea1.OffshoreWindPower || 0,
+          priceArea1.SolarPower || 0,
+          priceArea2.ProductionLt100MW || 0,
+          priceArea2.ProductionGe100MW || 0,
+          priceArea2.OnshoreWindPower || 0,
+          priceArea2.OffshoreWindPower || 0,
+          priceArea2.SolarPower || 0
+        ];
+
+        aggregate.push({
+          timestamp: priceArea1.Minutes5DK,
+          production: production.reduce((a, e) => a + e, 0),
+          exchange: exchange.reduce((a, e) => a + e, 0)
+        });
+      }
+      
+      return aggregate;
+    }
+
+    function display(aggregate) {
+      let presentation = `<div class='entries'>`;
+
+      for (let i = 0; i < aggregate.length; i++) {
+        presentation += `
+          <div class='entry'>
+            <div class='labels'>
+              <p class='ts'>${aggregate[i].timestamp}</p>
+              <p class='p'>Produktion: ${aggregate[i].production.toFixed(2)} MWh per hour</p>
+              <p class='p'>${aggregate[i].exchange < 0 ? 'Eksport' : 'Import'}: ${Math.abs(aggregate[i].exchange).toFixed(2)} MWh per hour</p>
+            </div>
+            <div class='${(rule(aggregate[i]) ? 'aktiv' : 'inaktiv')}'>${aggregate[i].exchange.toFixed(2)}</div>
+          </div>`;
+      }
+      presentation += `</div>`;
+
+      document.querySelector('.contain').innerHTML = presentation;
+    }
+    
+    let sql = `
+      SELECT
+        *
+      FROM
+        "electricityprodex5minrealtime"
+      ORDER BY
+        "Minutes5UTC" DESC
+      LIMIT 6
+    `.replace(/\n/g, '').split(' ').filter(x => x.length > 0).join(' ');
+
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/'; // Remove front-end CORS restriction
+    const targetUrl = `https://api.energidataservice.dk/datastore_search_sql?sql=${sql}`;
+
+    function updateData() {
+      fetch(proxyUrl + targetUrl)
+        .then((resp) => resp.json()) // Transform the data into json
+        .then((resp) => aggreateData(resp))
+        .then((aggregate) => display(aggregate))
+        .catch(function(e) { console.error(arguments) });
+    }
+
+    setInterval(updateData, 5 * 60 * 1000); // Opdater hver 5 minutter
+    updateData();
   </script>
 </body>
 

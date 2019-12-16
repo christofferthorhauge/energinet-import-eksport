@@ -39,9 +39,58 @@ a:active {
 }
 
 .contain p {
-    line-height: 1.55
+    line-height: 1.2;
 }
 
 .align-center {
     text-align: center
+}
+
+.contain .entries {
+    display: flex;
+    flex-direction: column;
+    white-space: nowrap;
+}
+
+.contain .entry {
+    display: flex;
+    background-color: #ddd;
+    padding: 20px;
+    width: 500px;
+    align-items: center;
+}
+
+.contain .entry + .entry {
+    margin-top: 20px;
+}
+
+.contain .entry .aktiv,
+.contain .entry .inaktiv {
+    height: 106px;
+    width: 200px;
+    margin-left: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+}
+
+.contain .entry .aktiv {
+    background-color: green;
+}
+
+.contain .entry .inaktiv {
+    background-color: red;
+}
+
+.contain .entry:first-child {
+    font-size: 1.3em;
+    font-weight: bold;
+    width: 611px;
+}
+.contain .entry:first-child .aktiv,
+.contain .entry:first-child .inaktiv {
+    height: 144px;
+    width: 233px;
 }
