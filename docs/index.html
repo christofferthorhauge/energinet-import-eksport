@@ -20,7 +20,7 @@
     function rule(currentEntry) {
       // Hvis nuværende udveksling af energi er negativ
       // (vi eksporterer mere end vi importerer)
-      if (currentLog.exchange < 0) {
+      if (currentEntry.exchange < 0) {
         return true;
       }
 
